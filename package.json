@@ -1,0 +1,18 @@
+{
+  "name": "socket-calls",
+  "version": "0.0.1",
+  "description": "low-level socket API (currently Linux only)",
+  "author": "Matthijs van Duin <matthijsvanduin@gmail.com>",
+  "private": true,
+  "license": "UNLICENSED",
+  "repository": "github:dutchanddutch/node-socket-calls",
+  "os": [
+    "linux"
+  ],
+  "main": "lib/index.js",
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^2.0.0"
+  },
+  "gypfile": true
+}
