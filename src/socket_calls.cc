@@ -303,22 +303,15 @@ let js_sendto( CallbackInfo const &args )
 	let env = args.Env();
 	let fd = args[0].As<Number>().Int32Value();
 	let msg = msghdr{};
-	if( ! args[1].IsUndefined() ) {
-		let addr = args[1].As<Buffer<u8>>();
+	let addr = args[1].As<Buffer<u8>>();
+	if( ! addr.IsUndefined() ) {
 		msg.msg_name = addr.Data();
 		msg.msg_namelen = (socklen_t)addr.Length();
 	}
-	let iov = iovec{};
+	let buf = args[2].As<Buffer<u8>>();
+	let iov = iovec{ buf.Data(), buf.Length() };
 	msg.msg_iov = &iov;
 	msg.msg_iovlen = 1;
-	let tmp = std::string{};
-	if( args[2].IsBuffer() ) {
-		let buf = args[2].As<Buffer<u8>>();
-		iov = iovec{ buf.Data(), buf.Length() };
-	} else {
-		tmp = args[2].As<String>().Utf8Value();
-		iov = iovec{ tmp.data(), tmp.size() };
-	}
 	if( ! args[3].IsUndefined() ) {
 		let cmsgs = args[3].As<Buffer<u8>>();
 		msg.msg_control = cmsgs.Data();
