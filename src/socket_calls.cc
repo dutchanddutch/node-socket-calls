@@ -275,7 +275,8 @@ let js_sockatmark( CallbackInfo const &args )
 {
 	let env = args.Env();
 	let fd = args[0].As<Number>().Int32Value();
-	return result( env, sockatmark( fd ) );
+	let res = sockatmark( fd );
+	return result( env, res, res > 0 );
 }
 
 template< typename T >
