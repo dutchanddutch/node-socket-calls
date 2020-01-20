@@ -59,6 +59,26 @@ datalen		= sendto( fd, addr, data, controldata=undefined, flags=0 );
 // recv/recvfrom is not yet implemented
 ```
 
+## Socket address utilities
+
+```js
+// address construction
+
+addr		= sa_unix( path, encoding='utf8' );
+
+// address parsing
+
+family		= sa_family( addr );
+
+path		= sa_unix_path( addr, encoding='utf8' );
+path		= sa_unix_path( addr, null );  // always returns Buffer
+```
+
+The path of a unix (`AF_UNIX`) socket may be a normal (absolute or relative)
+filesystem path, or it may be an identifier in the "abstrace namespace", which
+are represented as buffers those first byte is 0.
+
+
 ## Exported constants
 
 I made no attempt at completeness.  If one you need is missing, just create an
