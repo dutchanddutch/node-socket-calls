@@ -72,6 +72,12 @@ let result( Env env, Ret ret, Val const &val )
 	return Value::From( env, val );
 }
 
+template< typename Ret >
+let result_bool( Env env, Ret ret )
+{
+	return result( env, ret, (bool)ret );
+}
+
 template< typename Ret, typename Val1, typename Val2 >
 let result2( Env env, Ret ret, Val1 const &val1, Val2 const &val2 )
 {
@@ -291,8 +297,7 @@ let js_sockatmark( CallbackInfo const &args )
 {
 	let env = args.Env();
 	let fd = args[0].As<Number>().Int32Value();
-	let res = sockatmark( fd );
-	return result( env, res, res > 0 );
+	return result_bool( env, sockatmark( fd ) );
 }
 
 template< typename T >
@@ -312,7 +317,7 @@ let js_issocket( CallbackInfo const &args )
 {
 	let env = args.Env();
 	let fd = args[0].As<Number>().Int32Value();
-	return result( env, isfdtype( fd, S_IFSOCK ) );
+	return result_bool( env, isfdtype( fd, S_IFSOCK ) );
 }
 
 let js_sendto( CallbackInfo const &args )
