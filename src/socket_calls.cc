@@ -374,9 +374,6 @@ Object initialize( Env env, Object exports )
 	set_constant( exports, SOCK_DGRAM );
 	set_constant( exports, SOCK_SEQPACKET );
 
-	set_constant( exports, MSG_EOR );
-	set_constant( exports, MSG_MORE );
-
 	set_property( exports, "CMSG_ALIGN", (uint32_t) CMSG_ALIGN(1) );
 
 	set_constant( exports, SHUT_RD );
