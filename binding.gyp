@@ -5,7 +5,7 @@
       "sources": [ "src/socket_calls.cc" ],
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],
-      "cflags_cc": [ "-std=c++17" ],
+      "cflags_cc": [ "-std=gnu++1z" ],
       "include_dirs": [
       	"<!@(node -p \"require('node-addon-api').include\")"
       ]
