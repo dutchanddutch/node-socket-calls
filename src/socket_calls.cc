@@ -176,15 +176,31 @@ let js_getsockopt( CallbackInfo const &args )
 	let fd      = args[0].As<Number>().Int32Value();
 	let level   = args[1].As<Number>().Int32Value();
 	let optname = args[2].As<Number>().Int32Value();
-	if( args[3].IsUndefined() ) {
-		let val = int{};
-		let len = socklen_t{ sizeof val };
-		return result2( env, getsockopt( fd, level, optname, &val, &len ), val );
-	} else {
-		let buf = args[3].As<Buffer<u8>>();
-		let len = (socklen_t) buf.Length();
-		return result2( env, getsockopt( fd, level, optname, buf.Data(), &len ), len );
-	}
+	let buf     = args[3].As<Buffer<u8>>();
+	let len = (socklen_t) buf.Length();
+	return result2( env, getsockopt( fd, level, optname, buf.Data(), &len ), len );
+}
+
+let js_getsockopt_int( CallbackInfo const &args )
+{
+	let env = args.Env();
+	let fd      = args[0].As<Number>().Int32Value();
+	let level   = args[1].As<Number>().Int32Value();
+	let optname = args[2].As<Number>().Int32Value();
+	let val = int{};
+	let len = socklen_t{ sizeof val };
+	return result( env, getsockopt( fd, level, optname, &val, &len ), val );
+}
+
+let js_getsockopt_bool( CallbackInfo const &args )
+{
+	let env = args.Env();
+	let fd      = args[0].As<Number>().Int32Value();
+	let level   = args[1].As<Number>().Int32Value();
+	let optname = args[2].As<Number>().Int32Value();
+	let val = int{};
+	let len = socklen_t{ sizeof val };
+	return result( env, getsockopt( fd, level, optname, &val, &len ), val != 0 );
 }
 
 let js_setsockopt( CallbackInfo const &args )
@@ -430,6 +446,8 @@ Object initialize( Env env, Object exports )
 	set_function( exports, "socket",	js_socket );
 	set_function( exports, "socketpair",	js_socketpair );
 	set_function( exports, "getsockopt",	js_getsockopt );
+	set_function( exports, "getsockopt_int",js_getsockopt_int );
+	set_function( exports, "getsockopt_bool",js_getsockopt_bool );
 	set_function( exports, "setsockopt",	js_setsockopt );
 	set_function( exports, "bind",		js_bind );
 	set_function( exports, "connect",	js_connect );
