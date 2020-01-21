@@ -12,6 +12,14 @@ negated error code instead of -1.
 All file descriptors returned will have their close-on-exec flag set.  All
 sockets created will be non-blocking.
 
+## Table of contents
+
+<!-- toc-begin -->
+* [API summary](#api-summary)
+* [Socket address utilities](#socket-address-utilities)
+* [Exported constants](#exported-constants)
+<!-- toc-end -->
+
 ## API summary
 
 ```js
