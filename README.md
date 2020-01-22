@@ -17,6 +17,9 @@ sockets created will be non-blocking.
 <!-- toc-begin -->
 * [API summary](#api-summary)
 * [Socket address utilities](#socket-address-utilities)
+  * [`sa_family`( _addr_ )](#sa_family-addr-)
+  * [`sa_unix`( [_path_[, _encoding_]] )](#sa_unix-path-encoding-)
+  * [`sa_unix_path`( _addr_[, _encoding_] )](#sa_unix_path-addr-encoding-)
 * [Exported constants](#exported-constants)
 <!-- toc-end -->
 
@@ -69,23 +72,40 @@ datalen		= sendto( fd, addr, data, controldata=undefined, flags=0 );
 
 ## Socket address utilities
 
-```js
-// address construction
+The socket calls use raw socket addresses in buffers, but utilities are
+provided to encode and decode these:
 
-addr		= sa_unix( path, encoding='utf8' );
+### `sa_family`( _addr_ )
 
-// address parsing
+* _addr_: Socket address (buffer).
+* **returns**:  Address family (integer).
 
-family		= sa_family( addr );
+Extracts the address family (e.g. `AF_UNIX`) of a socket address.
 
-path		= sa_unix_path( addr, encoding='utf8' );
-path		= sa_unix_path( addr, null );  // always returns Buffer
-```
+### `sa_unix`( [_path_[, _encoding_]] )
 
-The path of a unix (`AF_UNIX`) socket may be a normal (absolute or relative)
-filesystem path, or it may be an identifier in the "abstrace namespace", which
-are represented as buffers those first byte is 0.
+* _path_: Socket path (string, URI object, buffer, or undefined). Defaults to `undefined`.
+* _encoding_: Used to encode the path if string or URI object, otherwise irrelevant. Defaults to `'utf8'`.
+* **returns**: Socket address (buffer).
 
+Encodes a socket address of family `AF_UNIX`.
+
+The path can be a filesystem path (string, URI object, or buffer) or an abstract namespace path (buffer whose
+first byte is 0), and in either case the maximum length of the path (in bytes) is given by the constant
+`UNIX_PATH_MAX`.  If the path `undefined` or has zero length, the autobind address is returned, which can be
+passed to `bind()` to have the kernel pick a unique address in the abstract namespace.
+
+### `sa_unix_path`( _addr_[, _encoding_] )
+
+* _addr_: Socket address (buffer).
+* _encoding_: Used to decode the path to a string provided _encoding_ is not `null` and the path is not in
+  abstract namespace (in either case a buffer is returned).  Defaults to `'utf8'`.
+* **returns**:  Socket path (string, buffer, or undefined).
+
+Extracts the path of a socket address of family `AF_UNIX`.
+
+The path can be a filesystem path (buffer if _encoding_ is `null`, string otherwise), an abstract namespace
+path (buffer whose first byte is 0), or `undefined` if _addr_ is the autobind address.
 
 ## Exported constants
 
@@ -172,3 +192,5 @@ ESHUTDOWN
 ESOCKTNOSUPPORT
 ETOOMANYREFS
 ```
+<!-- vim: tw=111
+-->
