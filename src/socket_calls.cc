@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <sys/un.h>
+#include <linux/un.h>
 #include <linux/sockios.h>
 
 #define let auto
@@ -373,6 +373,8 @@ Object initialize( Env env, Object exports )
 	set_constant( exports, SOCK_STREAM );
 	set_constant( exports, SOCK_DGRAM );
 	set_constant( exports, SOCK_SEQPACKET );
+
+	set_constant( exports, UNIX_PATH_MAX );
 
 	set_property( exports, "CMSG_ALIGN", (uint32_t) CMSG_ALIGN(1) );
 
