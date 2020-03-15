@@ -98,10 +98,20 @@ let result2( Env env, Ret ret, Val2 const &val2 )
 	return result2( env, ret, ret, val2 );
 }
 
+let int_arg( Value arg ) -> int
+{
+	return arg.As<Number>().Int32Value();
+}
+
+let int_arg( Value arg, int def_val ) -> int
+{
+	return arg.IsUndefined() ? def_val : int_arg( arg );
+}
+
 let js_getcloexec( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let flags = getfdflags( fd );
 	return result( env, flags, !!( flags & FD_CLOEXEC ) );
 }
@@ -109,7 +119,7 @@ let js_getcloexec( CallbackInfo const &args )
 let js_setcloexec( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let cloexec = args[1].IsUndefined() || args[1].ToBoolean().Value();
 	return result( env, setcloexec( fd, cloexec ) );
 }
@@ -117,7 +127,7 @@ let js_setcloexec( CallbackInfo const &args )
 let js_close( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 
 	// POSIX 2008 states that it unspecified what the state of a file descriptor is if
 	// close() is interrupted by a signal and fails with EINTR.  This is a problem for
@@ -160,18 +170,18 @@ let js_close( CallbackInfo const &args )
 let js_socket( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let domain   = args[0].As<Number>().Int32Value();
-	let type     = args[1].As<Number>().Int32Value() | SOCK_NONBLOCK | SOCK_CLOEXEC;
-	let protocol = args.Length() >= 3 ? args[2].As<Number>().Int32Value() : 0;
+	let domain   = int_arg( args[0] );
+	let type     = int_arg( args[1] ) | SOCK_CLOEXEC | SOCK_NONBLOCK;
+	let protocol = int_arg( args[2], 0 );
 	return result( env, socket( domain, type, protocol ) );
 }
 
 let js_socketpair( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let domain   = args[0].As<Number>().Int32Value();
-	let type     = args[1].As<Number>().Int32Value() | SOCK_NONBLOCK | SOCK_CLOEXEC;
-	let protocol = args.Length() >= 3 ? args[2].As<Number>().Int32Value() : 0;
+	let domain   = int_arg( args[0] );
+	let type     = int_arg( args[1] ) | SOCK_CLOEXEC | SOCK_NONBLOCK;
+	let protocol = int_arg( args[2], 0 );
 	int fds[2];
 	return result2( env, socketpair( domain, type, protocol, fds ), fds[0], fds[1] );
 }
@@ -179,9 +189,9 @@ let js_socketpair( CallbackInfo const &args )
 let js_getsockopt( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd      = args[0].As<Number>().Int32Value();
-	let level   = args[1].As<Number>().Int32Value();
-	let optname = args[2].As<Number>().Int32Value();
+	let fd      = int_arg( args[0] );
+	let level   = int_arg( args[1] );
+	let optname = int_arg( args[2] );
 	let buf     = args[3].As<Buffer<u8>>();
 	let len = (socklen_t) buf.Length();
 	return result2( env, getsockopt( fd, level, optname, buf.Data(), &len ), len );
@@ -190,9 +200,9 @@ let js_getsockopt( CallbackInfo const &args )
 let js_getsockopt_int( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd      = args[0].As<Number>().Int32Value();
-	let level   = args[1].As<Number>().Int32Value();
-	let optname = args[2].As<Number>().Int32Value();
+	let fd      = int_arg( args[0] );
+	let level   = int_arg( args[1] );
+	let optname = int_arg( args[2] );
 	let val = int{};
 	let len = socklen_t{ sizeof val };
 	return result( env, getsockopt( fd, level, optname, &val, &len ), val );
@@ -201,9 +211,9 @@ let js_getsockopt_int( CallbackInfo const &args )
 let js_getsockopt_bool( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd      = args[0].As<Number>().Int32Value();
-	let level   = args[1].As<Number>().Int32Value();
-	let optname = args[2].As<Number>().Int32Value();
+	let fd      = int_arg( args[0] );
+	let level   = int_arg( args[1] );
+	let optname = int_arg( args[2] );
 	let val = int{};
 	let len = socklen_t{ sizeof val };
 	return result( env, getsockopt( fd, level, optname, &val, &len ), val != 0 );
@@ -212,9 +222,9 @@ let js_getsockopt_bool( CallbackInfo const &args )
 let js_setsockopt( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd      = args[0].As<Number>().Int32Value();
-	let level   = args[1].As<Number>().Int32Value();
-	let optname = args[2].As<Number>().Int32Value();
+	let fd      = int_arg( args[0] );
+	let level   = int_arg( args[1] );
+	let optname = int_arg( args[2] );
 	if( args[3].IsNumber() || args[3].IsBoolean() ) {
 		let val = args[3].ToNumber().Int32Value();
 		return result( env, setsockopt( fd, level, optname, &val, sizeof val ) );
@@ -227,7 +237,7 @@ let js_setsockopt( CallbackInfo const &args )
 let js_bind( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let addr = args[1].As<Buffer<u8>>();
 	return result( env, bind( fd, (sockaddr const *)addr.Data(), addr.Length() ) );
 }
@@ -235,7 +245,7 @@ let js_bind( CallbackInfo const &args )
 let js_connect( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let addr = args[1].As<Buffer<u8>>();
 	return result( env, connect( fd, (sockaddr const *)addr.Data(), addr.Length() ) );
 }
@@ -243,7 +253,7 @@ let js_connect( CallbackInfo const &args )
 let js_getsockname( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let buf = args[1].As<Buffer<u8>>();
 	let len = (socklen_t) buf.Length();
 	return result( env, getsockname( fd, (sockaddr *)buf.Data(), &len ), len );
@@ -252,7 +262,7 @@ let js_getsockname( CallbackInfo const &args )
 let js_getpeername( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let buf = args[1].As<Buffer<u8>>();
 	let len = (socklen_t) buf.Length();
 	return result( env, getpeername( fd, (sockaddr *)buf.Data(), &len ), len );
@@ -261,42 +271,41 @@ let js_getpeername( CallbackInfo const &args )
 let js_listen( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
-	let n = args[1].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
+	let n = int_arg( args[1] );
 	return result( env, listen( fd, n ) );
 }
 
 let js_accept( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
-	let flags = args.Length() >= 2 ? args[1].As<Number>().Int32Value() : 0;
-	return result( env, accept4( fd, nullptr, nullptr, flags | SOCK_CLOEXEC | SOCK_NONBLOCK ) );
+	let fd = int_arg( args[0] );
+	let flags = int_arg( args[1], 0 ) | SOCK_CLOEXEC | SOCK_NONBLOCK;
+	return result( env, accept4( fd, nullptr, nullptr, flags ) );
 }
 
 let js_acceptfrom( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let buf = args[1].As<Buffer<u8>>();
 	let len = (socklen_t) buf.Length();
-	let flags = args.Length() >= 3 ? args[2].As<Number>().Int32Value() : 0;
-	flags |= SOCK_CLOEXEC | SOCK_NONBLOCK;
+	let flags = int_arg( args[2], 0 ) | SOCK_CLOEXEC | SOCK_NONBLOCK;
 	return result2( env, accept4( fd, (sockaddr *)buf.Data(), &len, flags ), len );
 }
 
 let js_shutdown( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
-	let how = args[1].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
+	let how = int_arg( args[1] );
 	return result( env, shutdown( fd, how ) );
 }
 
 let js_sockatmark( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	return result_bool( env, sockatmark( fd ) );
 }
 
@@ -304,7 +313,7 @@ template< typename T >
 let js_ioctl_read( CallbackInfo const &args, unsigned long request )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let value = T{};
 	return result( env, ioctl( fd, request, &value ), value );
 }
@@ -316,14 +325,14 @@ let js_getoutqnsd( CallbackInfo const &args ) {  return js_ioctl_read<int>( args
 let js_issocket( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	return result_bool( env, isfdtype( fd, S_IFSOCK ) );
 }
 
 let js_sendto( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = args[0].As<Number>().Int32Value();
+	let fd = int_arg( args[0] );
 	let msg = msghdr{};
 	let addr = args[1].As<Buffer<u8>>();
 	if( ! addr.IsUndefined() ) {
@@ -339,8 +348,8 @@ let js_sendto( CallbackInfo const &args )
 		msg.msg_control = cmsgs.Data();
 		msg.msg_controllen = (socklen_t)cmsgs.Length();
 	}
-	let flags = args[4].IsUndefined() ? 0 : args[4].As<Number>().Int32Value();
-	return result( env, sendmsg( fd, &msg, flags | MSG_DONTWAIT | MSG_NOSIGNAL ) );
+	let flags = int_arg( args[4], 0 ) | MSG_DONTWAIT | MSG_NOSIGNAL;
+	return result( env, sendmsg( fd, &msg, flags ) );
 }
 
 template< typename T >
