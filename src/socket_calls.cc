@@ -78,24 +78,27 @@ let result_bool( Env env, Ret ret )
 	return result( env, ret, (bool)ret );
 }
 
-template< typename Ret, typename Val1, typename Val2 >
-let result2( Env env, Ret ret, Val1 const &val1, Val2 const &val2 )
+template< typename ...Val >
+let create_array( Env env, Val const &...val )
 {
-	let result = Array::New( env, 2 );
-	if( ret < 0 ) {
-		result[0u] = -errno;
-		result[1u] = env.Undefined();
-	} else {
-		result[0u] = val1;
-		result[1u] = val2;
-	}
-	return result;
+	let array = Array::New( env, sizeof...(Val) );
+	let i = 0u;
+	( ..., array.Set( i++, val ) );
+	return array;
 }
 
-template< typename Ret, typename Val2 >
-let result2( Env env, Ret ret, Val2 const &val2 )
+template< typename Ret, typename ...Val >
+let result2( Env env, Ret ret, Val const &...val )
 {
-	return result2( env, ret, ret, val2 );
+	if( ret < 0 )
+		return create_array( env, -errno );
+	return create_array( env, val... );
+}
+
+template< typename Ret, typename ...Val >
+let result3( Env env, Ret ret, Val const &...val )
+{
+	return result2( env, ret, ret, val... );
 }
 
 let int_arg( Value arg ) -> int
@@ -194,7 +197,7 @@ let js_getsockopt( CallbackInfo const &args )
 	let optname = int_arg( args[2] );
 	let buf     = args[3].As<Buffer<u8>>();
 	let len = (socklen_t) buf.Length();
-	return result2( env, getsockopt( fd, level, optname, buf.Data(), &len ), len );
+	return result3( env, getsockopt( fd, level, optname, buf.Data(), &len ), len );
 }
 
 let js_getsockopt_int( CallbackInfo const &args )
@@ -291,7 +294,7 @@ let js_acceptfrom( CallbackInfo const &args )
 	let buf = args[1].As<Buffer<u8>>();
 	let len = (socklen_t) buf.Length();
 	let flags = int_arg( args[2], 0 ) | SOCK_CLOEXEC | SOCK_NONBLOCK;
-	return result2( env, accept4( fd, (sockaddr *)buf.Data(), &len, flags ), len );
+	return result3( env, accept4( fd, (sockaddr *)buf.Data(), &len, flags ), len );
 }
 
 let js_shutdown( CallbackInfo const &args )

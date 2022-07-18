@@ -25,6 +25,10 @@ sockets created will be non-blocking.
 
 ## API summary
 
+On failure these functions return
+* `-errno` if they normally return an integer or boolean
+* `[ -errno ]` if they normally return an array
+
 ```js
 err             = close( fd );
 
