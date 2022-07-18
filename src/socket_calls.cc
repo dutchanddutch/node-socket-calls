@@ -126,6 +126,21 @@ let js_setcloexec( CallbackInfo const &args )
 	return result( env, setcloexec( fd, cloexec ) );
 }
 
+let js_getnonblocking( CallbackInfo const &args )
+{
+	let env = args.Env();
+	let fd = int_arg( args[0] );
+	return result_bool( env, getnonblocking( fd ) );
+}
+
+let js_setnonblocking( CallbackInfo const &args )
+{
+	let env = args.Env();
+	let fd = int_arg( args[0] );
+	let nonblocking = args[1].IsUndefined() || args[1].ToBoolean().Value();
+	return result( env, setnonblocking( fd, nonblocking ) );
+}
+
 let js_close( CallbackInfo const &args )
 {
 	let env = args.Env();
@@ -457,6 +472,8 @@ Object initialize( Env env, Object exports )
 
 	set_function( exports, "getcloexec",	js_getcloexec );
 	set_function( exports, "setcloexec",	js_setcloexec );
+	set_function( exports, "getnonblocking",js_getnonblocking );
+	set_function( exports, "setnonblocking",js_setnonblocking );
 	set_function( exports, "close",		js_close );
 	set_function( exports, "socket",	js_socket );
 	set_function( exports, "socketpair",	js_socketpair );

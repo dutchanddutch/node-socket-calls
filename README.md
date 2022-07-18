@@ -35,6 +35,9 @@ err             = close( fd );
 err             = setcloexec( fd, bool=true );  // uses ioctl FIOCLEX/FIONCLEX
 bool            = getcloexec( fd );             // uses fcntl F_GETFD
 
+err             = setnonblocking( fd, bool=true );  // uses ioctl FIONBIO
+bool            = getnonblocking( fd );             // uses fcntl F_GETFL
+
 bool		= issocket( fd );		// uses isfdtype
 
 nbytes		= getinq( fd );		// bytes in input buffer (SIOCINQ)
