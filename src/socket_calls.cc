@@ -115,8 +115,7 @@ let js_getcloexec( CallbackInfo const &args )
 {
 	let env = args.Env();
 	let fd = int_arg( args[0] );
-	let flags = getfdflags( fd );
-	return result( env, flags, !!( flags & FD_CLOEXEC ) );
+	return result_bool( env, getcloexec( fd ) );
 }
 
 let js_setcloexec( CallbackInfo const &args )
