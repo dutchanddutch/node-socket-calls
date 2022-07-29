@@ -184,6 +184,15 @@ let js_close( CallbackInfo const &args )
 	return result( env, close( fd ) );
 }
 
+let js_dup( CallbackInfo const &args )
+{
+	let env = args.Env();
+	let fd = int_arg( args[0] );
+	let minfd = int_arg( args[1], 3 );
+	return result( env, fcntl( fd, F_DUPFD_CLOEXEC, minfd ) );
+}
+
+
 let js_socket( CallbackInfo const &args )
 {
 	let env = args.Env();
@@ -475,6 +484,8 @@ Object initialize( Env env, Object exports )
 	set_function( exports, "getnonblocking",js_getnonblocking );
 	set_function( exports, "setnonblocking",js_setnonblocking );
 	set_function( exports, "close",		js_close );
+	set_function( exports, "dup",		js_dup );
+
 	set_function( exports, "socket",	js_socket );
 	set_function( exports, "socketpair",	js_socketpair );
 	set_function( exports, "getsockopt",	js_getsockopt );

@@ -31,6 +31,7 @@ On failure these functions return
 
 ```js
 err             = close( fd );
+newfd           = dup( fd, minfd=3 );           // uses fcntl F_DUPFD_CLOEXEC
 
 err             = setcloexec( fd, bool=true );  // uses ioctl FIOCLEX/FIONCLEX
 bool            = getcloexec( fd );             // uses fcntl F_GETFD
