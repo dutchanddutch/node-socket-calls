@@ -38,11 +38,11 @@ bool            = getcloexec( fd );             // uses fcntl F_GETFD
 err             = setnonblocking( fd, bool=true );  // uses ioctl FIONBIO
 bool            = getnonblocking( fd );             // uses fcntl F_GETFL
 
-bool		= issocket( fd );		// uses isfdtype
+bool            = issocket( fd );               // uses isfdtype
 
-nbytes		= getinq( fd );		// bytes in input buffer (SIOCINQ)
-nbytes		= getoutq( fd );	// bytes in output buffer, unsent or unacknowledged (SIOCOUTQ)
-nbytes		= getoutqnsd( fd );	// bytes in output buffer, unsent (SIOCOUTQNSD)
+nbytes          = getinq( fd );         // bytes in input buffer (SIOCINQ)
+nbytes          = getoutq( fd );        // bytes in output buffer, unsent or unacknowledged (SIOCOUTQ)
+nbytes          = getoutqnsd( fd );     // bytes in output buffer, unsent (SIOCOUTQNSD)
 
 fd              = socket( domain, type, protocol );    
 [ fd1, fd2 ]    = socketpair( domain, type, protocol );
@@ -52,8 +52,8 @@ res             = setsockopt( fd, level, optname, int );
 res             = setsockopt( fd, level, optname, bool );
 
 [ res, datalen ]= getsockopt( fd, level, optname, databuf );
-int    		= getsockopt_int( fd, level, optname );
-bool   		= getsockopt_bool( fd, level, optname );
+int             = getsockopt_int( fd, level, optname );
+bool            = getsockopt_bool( fd, level, optname );
 
 err             = bind( fd, addr );
 err             = connect( fd, addr );
@@ -66,13 +66,13 @@ err             = listen( fd, int );
 fd              = accept( fd );
 [ fd, addrlen ] = acceptfrom( fd, addrbuf );
 
-err		= shutdown( fd, how );
+err             = shutdown( fd, how );
 
-bool		= sockatmark( fd );
+bool            = sockatmark( fd );
 
 // API for send/sendto is still subject to change!
-datalen		= send( fd, data, controldata=undefined, flags=0 );
-datalen		= sendto( fd, addr, data, controldata=undefined, flags=0 );
+datalen         = send( fd, data, controldata=undefined, flags=0 );
+datalen         = sendto( fd, addr, data, controldata=undefined, flags=0 );
 
 // recv/recvfrom is not yet implemented
 ```
@@ -199,5 +199,5 @@ ESHUTDOWN
 ESOCKTNOSUPPORT
 ETOOMANYREFS
 ```
-<!-- vim: tw=111
+<!-- vim: tw=111 sts=8 expandtab smarttab
 -->
