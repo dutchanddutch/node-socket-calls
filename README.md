@@ -64,13 +64,17 @@ addrlen         = getpeername( fd, addrbuf );
 
 err             = listen( fd, int );
 
-fd              = accept( fd );
-[ fd, addrlen ] = acceptfrom( fd, addrbuf );
-
 err             = shutdown( fd, how );
 
 bool            = sockatmark( fd );
 
+// both of these are actually wrappers for accept4()
+// flags will always implicitly include SOCK_CLOEXEC and SOCK_NONBLOCK
+fd              = accept( fd, flags=0 );
+[ fd, addrlen ] = acceptfrom( fd, addrbuf, flags=0 );
+
+// both of these are actually wrappers for sendmsg()
+// flags will always implicitly include MSG_DONTWAIT and MSG_NOSIGNAL
 // API for send/sendto is still subject to change!
 datalen         = send( fd, data, controldata=undefined, flags=0 );
 datalen         = sendto( fd, addr, data, controldata=undefined, flags=0 );
