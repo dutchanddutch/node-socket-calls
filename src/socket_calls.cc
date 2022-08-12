@@ -14,6 +14,10 @@
 #include <linux/un.h>
 #include <linux/sockios.h>
 
+#ifndef SCM_SECURITY
+#define SCM_SECURITY 0x03
+#endif
+
 #define let auto
 
 using u8 = uint8_t;
@@ -430,11 +434,14 @@ Object initialize( Env env, Object exports )
 
 	set_constant( exports, SO_PASSCRED );
 	set_constant( exports, SO_PEERCRED );
+	set_constant( exports, SO_PASSSEC );
+	set_constant( exports, SO_PEERSEC );
 	set_constant( exports, SO_RCVBUF );
 	set_constant( exports, SO_SNDBUF );
 
 	set_constant( exports, SCM_RIGHTS );
 	set_constant( exports, SCM_CREDENTIALS );
+	set_constant( exports, SCM_SECURITY );
 
 	set_constant( exports, EACCES );
 	set_constant( exports, EADDRINUSE );	// Address already in use
