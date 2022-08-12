@@ -1,6 +1,6 @@
 {
   "name": "socket-calls",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "low-level socket API (currently Linux only)",
   "author": "Matthijs van Duin <matthijsvanduin@gmail.com>",
   "private": true,

@@ -73,13 +73,18 @@ bool            = sockatmark( fd );
 fd              = accept( fd, flags=0 );
 [ fd, addrlen ] = acceptfrom( fd, addrbuf, flags=0 );
 
-// both of these are actually wrappers for sendmsg()
+// all of these are actually wrappers for sendmsg()
 // flags will always implicitly include MSG_DONTWAIT and MSG_NOSIGNAL
-// API for send/sendto is still subject to change!
-datalen         = send( fd, data, controldata=undefined, flags=0 );
-datalen         = sendto( fd, addr, data, controldata=undefined, flags=0 );
+datalen         = send( fd, data, flags=0 );
+datalen         = sendto( fd, data, addr, flags=0 );
+datalen         = sendmsg( fd, data, addr, cmsgs, flags=0 );
 
-// recv/recvfrom is not yet implemented
+// all of these are actually wrappers for recvmsg()
+// flags will always implicitly include MSG_DONTWAIT and MSG_CMSG_CLOEXEC
+// rflags is msg.msg_flags after the recvmsg() call
+[ datalen, rflags ]                    = recv( fd, databuf, flags=0 );
+[ datalen, addrlen, rflags ]           = recvfrom( fd, databuf, addrbuf, flags=0 );
+[ datalen, addrlen, cmsgslen, rflags ] = recvmsg( fd, databuf, addrbuf, cmsgsbuf, flags=0 );
 ```
 
 ## Socket address utilities

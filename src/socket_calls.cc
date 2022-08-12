@@ -115,6 +115,17 @@ let int_arg( Value arg, int def_val ) -> int
 	return arg.IsUndefined() ? def_val : int_arg( arg );
 }
 
+let buffer_arg( Value const &arg, void *&ptr_out ) -> size_t
+{
+	if( arg.IsUndefined() ) {
+		ptr_out = nullptr;
+		return 0;
+	}
+	let buf = arg.As<Buffer<u8>>();
+	ptr_out = buf.Data();
+	return buf.Length();
+}
+
 let js_getcloexec( CallbackInfo const &args )
 {
 	let env = args.Env();
@@ -359,28 +370,59 @@ let js_issocket( CallbackInfo const &args )
 	return result_bool( env, isfdtype( fd, S_IFSOCK ) );
 }
 
-let js_sendto( CallbackInfo const &args )
+struct SendRecvInfo {
+	int fd;
+	int flags;
+	iovec iov;
+	msghdr msg;
+
+	~SendRecvInfo() {}  // ensure not trivially copyable (for NRVO)
+};
+
+let inline js_send_recv_parse_args( CallbackInfo const &args, int nargs ) -> SendRecvInfo
+{
+	let info = SendRecvInfo{};
+	let &msg = info.msg;
+
+	info.fd = int_arg( args[0] );
+	info.flags = int_arg( args[ nargs - 1 ], 0 );
+
+	let &iov = info.iov;
+	iov.iov_len = buffer_arg( args[1], iov.iov_base );
+	msg.msg_iov = &iov;  // okay because of NRVO
+	msg.msg_iovlen = 1;
+
+	if( nargs >= 4 )
+		msg.msg_namelen = (socklen_t)buffer_arg( args[2], msg.msg_name );
+	if( nargs >= 5 )
+		msg.msg_controllen = (socklen_t)buffer_arg( args[3], msg.msg_control );
+
+	return info;
+}
+
+template< int nargs >
+let js_send( CallbackInfo const &args )
 {
 	let env = args.Env();
-	let fd = int_arg( args[0] );
-	let msg = msghdr{};
-	let addr = args[1].As<Buffer<u8>>();
-	if( ! addr.IsUndefined() ) {
-		msg.msg_name = addr.Data();
-		msg.msg_namelen = (socklen_t)addr.Length();
-	}
-	let buf = args[2].As<Buffer<u8>>();
-	let iov = iovec{ buf.Data(), buf.Length() };
-	msg.msg_iov = &iov;
-	msg.msg_iovlen = 1;
-	if( ! args[3].IsUndefined() ) {
-		let cmsgs = args[3].As<Buffer<u8>>();
-		msg.msg_control = cmsgs.Data();
-		msg.msg_controllen = (socklen_t)cmsgs.Length();
-	}
-	let flags = int_arg( args[4], 0 ) | MSG_DONTWAIT | MSG_NOSIGNAL;
-	return result( env, sendmsg( fd, &msg, flags ) );
+	let [ fd, flags, iov, msg ] = js_send_recv_parse_args( args, nargs );
+	return result( env, sendmsg( fd, &msg, flags | MSG_DONTWAIT | MSG_NOSIGNAL ) );
 }
+
+template< int nargs >
+let js_recv( CallbackInfo const &args )
+{
+	let env = args.Env();
+	let [ fd, flags, iov, msg ] = js_send_recv_parse_args( args, nargs );
+	let datalen = recvmsg( fd, &msg, flags | MSG_DONTWAIT | MSG_CMSG_CLOEXEC );
+	let rflags = msg.msg_flags & ~MSG_CMSG_CLOEXEC;
+	if( nargs <= 3 )
+		return result3( env, datalen, rflags );
+	else if( nargs == 4 )
+		return result3( env, datalen, msg.msg_namelen, rflags );
+	else
+		return result3( env, datalen, msg.msg_namelen, msg.msg_controllen, rflags );
+}
+
 
 template< typename T >
 let inline set_property( Object obj, char const *name, T value )
@@ -507,8 +549,12 @@ Object initialize( Env env, Object exports )
 	set_function( exports, "accept",	js_accept );
 	set_function( exports, "acceptfrom",	js_acceptfrom );
 	set_function( exports, "shutdown",	js_shutdown );
-	set_function( exports, "sendto",	js_sendto );
-//	set_function( exports, "recvfrom",	js_recvfrom );	// TODO
+	set_function( exports, "send",		js_send<3> );
+	set_function( exports, "sendto",	js_send<4> );
+	set_function( exports, "sendmsg",	js_send<5> );
+	set_function( exports, "recv",		js_recv<3> );
+	set_function( exports, "recvfrom",	js_recv<4> );
+	set_function( exports, "recvmsg",	js_recv<5> );
 	set_function( exports, "sockatmark",	js_sockatmark );
 	set_function( exports, "getoutqnsd",	js_getoutqnsd );
 	set_function( exports, "getoutq",	js_getoutq );
