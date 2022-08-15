@@ -370,26 +370,18 @@ let js_issocket( CallbackInfo const &args )
 	return result_bool( env, isfdtype( fd, S_IFSOCK ) );
 }
 
-struct SendRecvInfo {
-	int fd;
-	int flags;
-	iovec iov;
-	msghdr msg;
-
-	~SendRecvInfo() {}  // ensure not trivially copyable (for NRVO)
-};
-
-let inline js_send_recv_parse_args( CallbackInfo const &args, int nargs ) -> SendRecvInfo
+let inline js_send_recv_common( CallbackInfo const &args, int nargs, bool send ) -> Value
 {
-	let info = SendRecvInfo{};
-	let &msg = info.msg;
+	let env = args.Env();
 
-	info.fd = int_arg( args[0] );
-	info.flags = int_arg( args[ nargs - 1 ], 0 );
+	let fd = int_arg( args[0] );
+	let flags = int_arg( args[ nargs - 1 ], 0 );
 
-	let &iov = info.iov;
+	let iov = iovec{};
 	iov.iov_len = buffer_arg( args[1], iov.iov_base );
-	msg.msg_iov = &iov;  // okay because of NRVO
+
+	let msg = msghdr{};
+	msg.msg_iov = &iov;
 	msg.msg_iovlen = 1;
 
 	if( nargs >= 4 )
@@ -397,30 +389,32 @@ let inline js_send_recv_parse_args( CallbackInfo const &args, int nargs ) -> Sen
 	if( nargs >= 5 )
 		msg.msg_controllen = (socklen_t)buffer_arg( args[3], msg.msg_control );
 
-	return info;
-}
+	if( send )
+		return result( env, sendmsg( fd, &msg, flags | MSG_DONTWAIT | MSG_NOSIGNAL ) );
 
-template< int nargs >
-let js_send( CallbackInfo const &args )
-{
-	let env = args.Env();
-	let [ fd, flags, iov, msg ] = js_send_recv_parse_args( args, nargs );
-	return result( env, sendmsg( fd, &msg, flags | MSG_DONTWAIT | MSG_NOSIGNAL ) );
-}
-
-template< int nargs >
-let js_recv( CallbackInfo const &args )
-{
-	let env = args.Env();
-	let [ fd, flags, iov, msg ] = js_send_recv_parse_args( args, nargs );
 	let datalen = recvmsg( fd, &msg, flags | MSG_DONTWAIT | MSG_CMSG_CLOEXEC );
 	let rflags = msg.msg_flags & ~MSG_CMSG_CLOEXEC;
+
 	if( nargs <= 3 )
 		return result3( env, datalen, rflags );
 	else if( nargs == 4 )
 		return result3( env, datalen, msg.msg_namelen, rflags );
 	else
 		return result3( env, datalen, msg.msg_namelen, msg.msg_controllen, rflags );
+}
+
+template< int nargs >
+let js_send( CallbackInfo const &args )
+{
+	static_assert( nargs >= 3 && nargs <= 5 );
+	return js_send_recv_common( args, nargs, true );
+}
+
+template< int nargs >
+let js_recv( CallbackInfo const &args )
+{
+	static_assert( nargs >= 3 && nargs <= 5 );
+	return js_send_recv_common( args, nargs, false );
 }
 
 
