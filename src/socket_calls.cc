@@ -9,10 +9,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/syscall.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <linux/un.h>
 #include <linux/sockios.h>
+#include <linux/kcmp.h>
 
 #ifndef SCM_SECURITY
 #define SCM_SECURITY 0x03
@@ -205,6 +207,16 @@ let js_dup( CallbackInfo const &args )
 	let fd = int_arg( args[0] );
 	let minfd = int_arg( args[1], 3 );
 	return result( env, fcntl( fd, F_DUPFD_CLOEXEC, minfd ) );
+}
+
+let js_is_same_fd( CallbackInfo const &args )
+{
+	let env = args.Env();
+	let pid = getpid();
+	let fd0 = int_arg( args[0] );
+	let fd1 = int_arg( args[1] );
+	let res = syscall( SYS_kcmp, pid, pid, KCMP_FILE, (unsigned)fd0, (unsigned)fd1 );
+	return result( env, res, res == 0 );
 }
 
 
@@ -538,6 +550,7 @@ Object initialize( Env env, Object exports )
 	set_function( exports, "setnonblocking",js_setnonblocking );
 	set_function( exports, "close",		js_close );
 	set_function( exports, "dup",		js_dup );
+	set_function( exports, "is_same_fd",	js_is_same_fd );
 
 	set_function( exports, "socket",	js_socket );
 	set_function( exports, "socketpair",	js_socketpair );
