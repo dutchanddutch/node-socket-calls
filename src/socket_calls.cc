@@ -377,12 +377,22 @@ let inline js_send_recv_common( CallbackInfo const &args, int nargs, bool send )
 	let fd = int_arg( args[0] );
 	let flags = int_arg( args[ nargs - 1 ], 0 );
 
-	let iov = iovec{};
-	iov.iov_len = buffer_arg( args[1], iov.iov_base );
+	let iovlen = 1u;
+	if( args[1].IsArray() )
+		iovlen = args[1].As<Array>().Length();
+	iovec iov[ iovlen ];
+
+	if( args[1].IsArray() ) {
+		let bufs = args[1].As<Array>();
+		for( let i = 0u; i < iovlen; ++i )
+			iov[i].iov_len = buffer_arg( bufs[i], iov[i].iov_base );
+	} else {
+		iov[0].iov_len = buffer_arg( args[1], iov[0].iov_base );
+	}
 
 	let msg = msghdr{};
-	msg.msg_iov = &iov;
-	msg.msg_iovlen = 1;
+	msg.msg_iov = iov;
+	msg.msg_iovlen = iovlen;
 
 	if( nargs >= 4 )
 		msg.msg_namelen = (socklen_t)buffer_arg( args[2], msg.msg_name );

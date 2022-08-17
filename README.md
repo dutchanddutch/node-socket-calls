@@ -74,12 +74,14 @@ fd              = accept( fd, flags=0 );
 [ fd, addrlen ] = acceptfrom( fd, addrbuf, flags=0 );
 
 // all of these are actually wrappers for sendmsg()
+// data may also be an array of buffers
 // flags will always implicitly include MSG_DONTWAIT and MSG_NOSIGNAL
 datalen         = send( fd, data, flags=0 );
 datalen         = sendto( fd, data, addr, flags=0 );
 datalen         = sendmsg( fd, data, addr, cmsgs, flags=0 );
 
 // all of these are actually wrappers for recvmsg()
+// databuf may also be an array of buffers
 // flags will always implicitly include MSG_DONTWAIT and MSG_CMSG_CLOEXEC
 // rflags is msg.msg_flags after the recvmsg() call
 [ datalen, rflags ]                    = recv( fd, databuf, flags=0 );
